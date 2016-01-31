@@ -1,0 +1,100 @@
+body {
+	font-family: 'Open Sans', sans-serif;
+	font-size: 12px;
+	font-weight: 400;
+	color: #E0E0E0;
+	text-align: center;
+	background: #101420;
+	cursor: default;
+}
+
+a, a:hover {
+	color: #EC0080;
+}
+
+li {
+	text-align: left;
+}
+
+.dg, li.title, .close-button {
+	font-family: 'Open Sans', sans-serif;
+	font-weight: 300;	
+	font-size: 11px;	
+	text-shadow: none;
+}
+
+#info {
+	font-family: 'Poiret One', cursive;
+    font-size: 24px;
+	position: absolute;
+	bottom: 25px;
+	left: 25px;
+	opacity: 0.8;
+	color: #F0F0F0;
+	line-height: 24px;
+	height: 24px;
+	cursor: pointer;
+}
+
+#credits {
+	font-family: 'Poiret One', cursive;
+    font-size: 12px;
+	position: absolute;
+	bottom: 25px;
+	right: 25px;
+	opacity: 0.8;
+	color: #D1D1D1;
+	max-width: 70%;
+	text-align: right;
+}
+
+.modal {
+	color: #0A0A0A;
+}
+
+.modal-header {
+	background: rgba(16,20,32,0.9);
+	color: white;
+}
+
+.modal-content {
+	background: rgba(252,252,255,0.8);
+	border-radius: 0px;
+	border: 0px;
+}
+
+.modal-title {
+	font-family: 'Poiret One', cursive;
+    font-size: 30px;
+	font-weight: 700;
+}
+
+.modal-body{
+	text-align:left;
+	color: #5E5E5E;
+}
+
+.start-message {
+	font-size: 20px;
+	text-align: center;
+	font-family: 'Poiret One', cursive;
+	font-weight: 700;
+	padding-bottom: 15px;
+}
+
+.close, .close:hover {
+	color: white;
+	opacity: 1;
+	text-shadow: none;
+}
+
+.spirograph-parameter-img {
+	width: 90%;
+	padding-top: 20px;
+	padding-bottom: 20px;
+}
+
+.spirograph {
+	fill: none;
+	stroke-width: 1px;
+}
