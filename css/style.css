@@ -14,6 +14,7 @@ a, a:hover {
 
 li {
 	text-align: left;
+	font-size: 10px;
 }
 
 .dg, li.title, .close-button {

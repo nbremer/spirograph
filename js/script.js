@@ -9,53 +9,75 @@ var screenWidth = $(window).innerWidth(),
 var margin = {left: 0, top: 0, right: 0, bottom: 0},
 	width = screenWidth - margin.left - margin.right - 15,
 	height = (mobileScreen ? 300 : screenHeight) - margin.top - margin.bottom - 25;
-	
-var maxSize = Math.min(width, height) / 2,
-	resetRandom = true;
-	
-var colors = ["#00AC93", "#EC0080", "#FFE763"];	
-var numColors = 3;
-var startColor = getRandomNumber(0,numColors); //Loop through the colors, but the starting color is random
+
+//Create the SVG	
+var svg = d3.select("#chart").append("svg")
+			.attr("width", (width + margin.left + margin.right))
+			.attr("height", (height + margin.top + margin.bottom))
+			.style("isolation", "isolate")
+		  .append("g").attr("class", "wrapper")
+			.attr("transform", "translate(" + (width / 2 + margin.left) + "," + (height / 2 + margin.top) + ")");
+
+//If the viewer clicks anywhere and the screen then draw a spiro
+//Mainly meant for the mobile viewers
+d3.select("#chart").on("click", function() {
+	addRandomSpiro(); //Boolean(Math.floor(Math.random() * 2)) ? addSpiro() : addDashedSpiro() 
+});
+
+////////////////////////////////////////////////////////////
+////////////// Spirograph initial settings /////////////////
+////////////////////////////////////////////////////////////
+
+var maxSize = 200,
+	colorReset = true,
+	colorCounter = 1,
+	maxRadiusScreenFirstSpiro = Math.min(width, height) / 2 * 0.6;
+
+var colors = ["#EC0080", "#00AC93", "#FFE763"];	
+var numColors = colors.length;
 	
 //Set initial random spirograph parameters
 var spiroParameters = {};
-	spiroParameters["Duration"] = 20; //seconds
-	spiroParameters["Outer radius"] = getRandomNumber(60, maxSize);
-	spiroParameters["Inner radius"] = getRandomNumber(40, (spiroParameters["Outer radius"] * 0.75));
-	spiroParameters["rho"] = getRandomNumber(25, spiroParameters["Inner radius"]);
-	spiroParameters.l = function() {
-		return this["rho"]/this["Inner radius"];
-	};
-	spiroParameters.k = function() {
-		return this["Inner radius"]/this["Outer radius"];
-	};
+	//Drawing controls
 	spiroParameters["Add spiro"] = addSpiro;
 	spiroParameters["Add dashed spiro"] = addDashedSpiro;
+	spiroParameters["Add random spiro"] = addRandomSpiro;
 	spiroParameters["Remove last"] = removeLastSpiro;
 	spiroParameters["Reset"] = resetSpiro;
+	//Parameter controls
+	spiroParameters["Duration"] = 4; //in seconds
+	spiroParameters["Outer wheel"] = 105;
+	spiroParameters["Inner wheel"] = 48;
+	spiroParameters["% inner wheel"] = 0.8;
+	spiroParameters[eval('"\\u03B1"')] = 0.05;
+	spiroParameters["Start"] = 0;
+	spiroParameters["Steps"] = 10000;
+	spiroParameters["Line width"] = 2;
+	spiroParameters["Color mode"] = "screen";
+	spiroParameters["Color"] = "#EC0080";
+	spiroParameters["Background"] = "#101420";
+	//Make the first spirograph fit nicely in the screen
+	spiroParameters["Scale"] = Math.round(maxRadiusScreenFirstSpiro / spiroParameters["Outer wheel"] * 10)/10;
+
 		
 //Basic line function
 var line = d3.svg.line()
 	.x(function(d) { return d.x; })
 	.y(function(d) { return d.y; });
 					
-//Create the SVG	
-var svg = d3.select("#chart").append("svg")
-			.attr("width", (width + margin.left + margin.right))
-			.attr("height", (height + margin.top + margin.bottom))
-		  .append("g").attr("class", "wrapper")
-			.attr("transform", "translate(" + (width / 2 + margin.left) + "," + (height / 2 + margin.top) + ")");
-
 ////////////////////////////////////////////////////////////
 ////////////////// Spirograph functions ////////////////////
 ////////////////////////////////////////////////////////////
 		
 function drawSpiro(doDash) {
+
 	var path = svg.append("path")
 		.attr("class", "spirograph")
 		.attr("d", line(plotSpiroGraph()) )
-		.style("stroke", colors[startColor]);
-		//.style("stroke", "hsla(" + startColor/numColors * 360 + ", 100%, 50%, " + 0.9 + ")");	
+		//.attr("transform", "scale(" + spiroParameters["Scale"] + ")")
+		.style("mix-blend-mode", spiroParameters["Color mode"])
+		.style("stroke", spiroParameters["Color"])
+		.style("stroke-width", spiroParameters["Line width"]);
 		
 	var totalLength = path.node().getTotalLength();	
 	  
@@ -92,106 +114,118 @@ function drawSpiro(doDash) {
 }//function drawSpiro
 			
 function plotSpiroGraph() {
-    //Function adjusted from: https://github.com/rho2k/HTML5Demos/blob/master/Canvas/spiroGraph.html
-	
-    var R = spiroParameters["Outer radius"];
-    var r = spiroParameters["Inner radius"];
-    var rho = spiroParameters["rho"];
-    var l = spiroParameters.l(); //rho / r;
-    var k = spiroParameters.k(); //r / R;
+
+    var R = spiroParameters["Scale"] * spiroParameters["Outer wheel"];
+    var r = spiroParameters["Scale"] * spiroParameters["Inner wheel"];
+    var rho = spiroParameters["% inner wheel"];
+    var alpha = spiroParameters[eval('"\\u03B1"')];
+    alpha = alpha * Math.PI / 180;
+    var start = spiroParameters["Start"];
+    var steps = spiroParameters["Steps"];
     
+    var x0 = 5e5, 
+    	y0 = 5e5;
+
     //Create the x and y coordinates for the spirograph and put these in a variable
 	var lineData = [];
-    for(var theta=1; theta<=20000; theta += 1){
-        var t = ((Math.PI / 180) * theta);
-        var ang = ((l-k)/k) * t;
-        var x = R * ((1-k) * Math.cos(t) + ((l*k) * Math.cos(ang)));
-        var y = R * ((1-k) * Math.sin(t) - ((l*k) * Math.sin(ang)));
+    for(var theta = start; theta < (start + steps); theta += 1){
+        var t = (Math.PI / 180) * theta ;
+        var x = (R-r) * Math.cos(t + alpha) + rho * r * Math.cos( (R-r)/r * t - alpha ) ;
+        var y = (R-r) * Math.sin(t + alpha) - rho * r * Math.sin( (R-r)/r * t - alpha) ;
 		
-        lineData.push({x: x, y: y});                               
-    }  
+        lineData.push({x: x, y: y});   
+
+        //Break out of the loop when you reach the starting location again
+        //no use to run over the same loop again
+        if( Math.abs(x - x0) < 1e-1 && Math.abs(y - y0) < 1e-1 && theta > start + 100 ) {
+        	//console.log(theta);
+        	break;
+        }//if
+
+        //Set the start location
+        if(theta === start) {
+        	x0 = x;
+        	y0 = y;
+        }//if
+
+    }//for theta 
 	
 	//Output the variables of this spiro         
-	console.log("R: " + R + ", r: " + r + ", rho: " + rho + ", l: " + l + ", k: " + k);
+	console.log("Spirograph parameters: Outer wheel: " + spiroParameters["Outer wheel"] + ", Inner wheel: " + spiroParameters["Inner wheel"] + 
+		", % of inner wheel: " + Math.round(rho*1000)/1000 + ", alpha: " + alpha + ", start: " + start + ", steps: " + (theta-start) + 
+		", color: " + spiroParameters["Color"] + ", scale: " + spiroParameters["Scale"] + ", line width: " + spiroParameters["Line width"] );
 	
 	return lineData;
 }//function plotSpiroGraph
 
 ////////////////////////////////////////////////////////////
-//////////////////////// Functions /////////////////////////
+//////////// Spirograph control functions //////////////////
 ////////////////////////////////////////////////////////////
-
-//Add a property to D3 to select the first/last spiro drawn
-//From http://stackoverflow.com/questions/25405359/how-can-i-select-last-child-in-d3-js
-d3.selection.prototype.first = function() {
-  return d3.select(this[0][0]);
-};
-d3.selection.prototype.last = function() {
-  var last = this.size() - 1;
-  return d3.select(this[0][last]);
-};
-
-function getRandomNumber(start, end) {
-    return (Math.floor((Math.random() * (end-start))) + start);
-}//function getRandomNumber
 
 //Take random numbers for the spirograph variables
 function doRandomValues() {
-	spiroParameters["Outer radius"] = getRandomNumber(40, maxSize);
-	spiroParameters["Inner radius"] = getRandomNumber(20, (spiroParameters["Outer radius"] * 0.9));
-	spiroParameters["rho"] = getRandomNumber(15, spiroParameters["Inner radius"] * 0.9);
-	changeOuterRadius(spiroParameters["Outer radius"]);
-	changeInnerRadius(spiroParameters["Inner radius"]);
-	resetRandom = true;
+	spiroParameters["Outer wheel"] = getRandomNumber(60, maxSize);
+	outerRadiusContr.updateDisplay();
+
+	spiroParameters["Inner wheel"] = getRandomNumber(30, (spiroParameters["Outer wheel"] * 0.99));
+	//Check that r < R
+	changeOuterRadius(spiroParameters["Outer wheel"]);
+
+	spiroParameters["% inner wheel"] = Math.min( Math.random() + 0.2, 1);
+	rhoContr.updateDisplay();
 }//function doRandomValues
 
-//If the viewer clicks anywhere and the screen then draw a spiro
-//Mainly meant for the mobile viewers
-d3.select("#chart").on("click", function() {
-	Boolean(Math.floor(Math.random() * 2)) ? addSpiro() : addDashedSpiro() 
-});
+//Rotate to another color of no other color was picked
+function pickNewColor() {
+	spiroParameters["Color"] = colors[colorCounter % numColors];
+	colorContr.updateDisplay();
+	colorCounter++;
+	colorReset = true;
+}//pickNewColor
 
 //Add a normal solid line spirograph
 function addSpiro() {
-	//If the controls have not been changed, take random values
-	if ( resetRandom ) doRandomValues();
-	//Move the color one further
-	startColor = (startColor+1)%numColors;
 	//Create and draw a spiro
 	drawSpiro(false);
+	//Pick a new color if no other color has been set
+	if ( colorReset ) pickNewColor();
 }//function addSpiro
 
 //Add a dashed line spirograph
-function addDashedSpiro() {
-	//If the controls have not been changed, take random values
-	if ( resetRandom ) doRandomValues();
-	//Move the color one further
-	startColor = (startColor+1)%numColors;		
+function addDashedSpiro() {	
 	//Create and draw a dashed spiro
 	drawSpiro(true);
+	//Pick a new color if no other color has been set
+	if ( colorReset ) pickNewColor();
 }//function addDashedSpiro
 
-//Remove all spirographs
-function resetSpiro() {
-	//Remove all spiros
-	d3.selectAll(".spirograph").remove();
-	//Set new start color
-	startColor = getRandomNumber(0,numColors);
-	resetRandom = true;
-}//function resetSpiro
+//Add a normal solid line spirograph
+function addRandomSpiro() {
+	//Take random values
+	doRandomValues();
+	//Create and draw a spiro
+	drawSpiro(false);
+	//Pick a new color if no other color has been set
+	if ( colorReset ) pickNewColor();
+}//function addRandomSpiro
 
 //Remove only the last drawn spirograph
 function removeLastSpiro() {
 	//Remove the last drawn spiro
 	d3.selectAll(".spirograph").last().remove();
 	//Move the color one back
-	var newColor = (startColor-1)%numColors;
-	startColor = (newColor < 0 ? newColor+3 : newColor);
-	resetRandom = true;
+	colorCounter = colorCounter - 2;
+	if ( colorReset ) pickNewColor();
 }//function removeLastSpiro
 
+//Remove all spirographs
+function resetSpiro() {
+	//Remove all spiros
+	d3.selectAll(".spirograph").remove();
+}//function resetSpiro
+
 ////////////////////////////////////////////////////////////
-//////////////////// Control functions /////////////////////
+///////////////// Drawing control functions ////////////////
 ////////////////////////////////////////////////////////////
 		
 // Create an instance, which also creates a UI pane
@@ -203,62 +237,77 @@ var folder1 = gui.addFolder('Drawing');
 
 folder1.add(spiroParameters, "Add spiro");
 folder1.add(spiroParameters, "Add dashed spiro");
+folder1.add(spiroParameters, "Add random spiro");
 folder1.add(spiroParameters, "Remove last");
 folder1.add(spiroParameters, "Reset");
 //Open the drawing options by default
 folder1.open();
-	
+
+////////////////////////////////////////////////////////////
+/////////////// Parameter control functions ////////////////
+////////////////////////////////////////////////////////////
+
 //Create a folder with spirograph setting parameters
-var folder2 = gui.addFolder('Parameters');
-		
-var durationContr = folder2.add(spiroParameters, "Duration").min(1).max(120).step(1).listen();
-durationContr.onChange(function(newValue) { 
-	spiroParameters["Duration"] = newValue; 
+var folder2 = gui.addFolder('Parameters');	
+
+var outerRadiusContr = folder2.add(spiroParameters, "Outer wheel").min(1).max(maxSize).step(1);
+outerRadiusContr.onChange(function(newValue) { changeOuterRadius(newValue); });
+function changeOuterRadius(newValue) { 
+	spiroParameters["Outer radius"] = newValue;
+	
+	//Set the maximum of the inner wheel to the maximum of the outer fixed one
+	innerRadiusContr.max(spiroParameters["Outer wheel"]);
+
+	//Make sure that you can never have r > R
+	if ( spiroParameters["Outer wheel"] <= spiroParameters["Inner wheel"] ) {
+		spiroParameters["Inner wheel"] = spiroParameters["Outer wheel"];
+	}//if
+
+	innerRadiusContr.updateDisplay();
+}//function changeOuterRadius
+
+var innerRadiusContr = folder2.add(spiroParameters, "Inner wheel").min(1).max(spiroParameters["Outer wheel"]).step(1);
+innerRadiusContr.onChange(function(newValue) { spiroParameters["Inner wheel"] = newValue; });
+
+var rhoContr = folder2.add(spiroParameters, "% inner wheel").min(0).max(1).step(0.05);
+rhoContr.onChange(function(newValue) { spiroParameters["% inner wheel"] = newValue; });
+
+var alphaContr = folder2.add(spiroParameters, eval('"\\u03B1"')).min(-180).max(180).step(0.05);
+alphaContr.onChange(function(newValue) { spiroParameters[eval('"\\u03B1"')] = newValue; });
+
+var startContr = folder2.add(spiroParameters, "Start").min(0).max(20e3).step(50);
+startContr.onChange(function(newValue) { spiroParameters["Start"] = newValue; });
+
+var stepContr = folder2.add(spiroParameters, "Steps").min(0).max(20e3).step(50);
+stepContr.onChange(function(newValue) { spiroParameters["Steps"] = newValue; });
+
+var scaleContr = folder2.add(spiroParameters, "Scale").min(0.1).max(5).step(0.1);
+scaleContr.onChange(function(newValue) { spiroParameters["Scale"] = newValue; });
+
+var durationContr = folder2.add(spiroParameters, "Duration").min(1).max(20).step(1);
+durationContr.onChange(function(newValue) { spiroParameters["Duration"] = newValue; });
+
+var widthContr = folder2.add(spiroParameters, "Line width").min(0).max(30).step(0.5);
+widthContr.onChange(function(newValue) { spiroParameters["Line width"] = newValue; });
+
+var blendContr = folder2.add(spiroParameters, "Color mode", { Screen: "screen", Multiply: "multiply", None: "none" } );
+blendContr.onChange(function(newValue) { spiroParameters["Color mode"] = newValue; });
+
+var colorContr = folder2.addColor(spiroParameters, "Color");
+colorContr.onChange(function(newValue) { 
+	spiroParameters["Color"] = newValue; 
+	colorReset = false;
 });
 
-var outerRadiusContr = folder2.add(spiroParameters, "Outer radius").min(1).max(maxSize).step(1).listen();
-outerRadiusContr.onChange(function(newValue) { changeOuterRadius(newValue); });
+var backColorContr = folder2.addColor(spiroParameters, "Background");
+backColorContr.onChange(function(newValue) { 
+	spiroParameters["Background"] = newValue; 
+	d3.select("body").style("background", newValue);
+});
 
-var innerRadiusContr = folder2.add(spiroParameters, "Inner radius").min(1).max(spiroParameters["Outer radius"]).step(1).listen();
-innerRadiusContr.onChange(function(newValue) { changeInnerRadius(newValue); })
-
-var rhoContr = folder2.add(spiroParameters, "rho").min(1).max(spiroParameters["Inner radius"]).step(1).listen();
-rhoContr.onChange(function(newValue) { changeRho(newValue); })
 
 //Close the controls if the person is on mobile
 if(mobileScreen) gui.close();
-
-function changeOuterRadius(newValue) { 
-	spiroParameters["Outer radius"] = newValue;
-	innerRadiusContr.max(spiroParameters["Outer radius"]);
-	//Make sure that you can never have r > R
-	if ( spiroParameters["Outer radius"] <= spiroParameters["Inner radius"] ) {
-		spiroParameters["Inner radius"] = spiroParameters["Outer radius"];
-		//Make sure that you can never have that rho > r
-		rhoContr.max(spiroParameters["Inner radius"]);
-		if ( spiroParameters["Inner radius"] <= spiroParameters["rho"] ) {
-			spiroParameters["rho"] = spiroParameters["Inner radius"];
-		}//if
-	}//if
-	
-	resetRandom = false;
-}//function changeOuterRadius
-
-function changeInnerRadius(newValue) { 
-	spiroParameters["Inner radius"] = newValue;
-	rhoContr.max(spiroParameters["Inner radius"]);
-	//Make sure that you can never have that rho > r
-	if ( spiroParameters["Inner radius"] <= spiroParameters["rho"] ) {
-		spiroParameters["rho"] = spiroParameters["Inner radius"];
-	}//if
-	
-	resetRandom = false;
-}//function changeInnerRadius
-
-function changeRho(newValue) { 
-	spiroParameters["rho"] = newValue; 
-	resetRandom = false;
-}//function changeRho
 
 ////////////////////////////////////////////////////////////
 ///////////////// Spiro icon below info text ///////////////
@@ -296,8 +345,31 @@ $(document).ready(function() {
           }
     });
 		
-	//Start drawing one spirograph after 1.5 second after reload
+	//Start drawing one spirograph after 1 second after reload
 	setTimeout(function() {
+		//Strange fix to make alpha be updatable by 0.05
+		spiroParameters[eval('"\\u03B1"')] = 0;
+		alphaContr.updateDisplay();
+
 		drawSpiro(false);
+		pickNewColor();
 	}, 1000);
   });
+
+////////////////////////////////////////////////////////////
+//////////////////// Helper Functions //////////////////////
+////////////////////////////////////////////////////////////
+
+//Add a property to D3 to select the first/last spiro drawn
+//From http://stackoverflow.com/questions/25405359/how-can-i-select-last-child-in-d3-js
+d3.selection.prototype.first = function() {
+  return d3.select(this[0][0]);
+};
+d3.selection.prototype.last = function() {
+  var last = this.size() - 1;
+  return d3.select(this[0][last]);
+};
+
+function getRandomNumber(start, end) {
+    return (Math.floor((Math.random() * (end-start))) + start);
+}//function getRandomNumber

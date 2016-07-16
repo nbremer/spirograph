@@ -3,6 +3,9 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
 	<title>Spirograph drawing</title>
+    <meta name="author" content="Nadieh Bremer">
+    <meta name="description" content="Draw your own beautiful Spirographs online">
+    <meta name="keywords" content="spirograph, spirographs, math, art, d3.js, data visualization, visualization">
 
 	<!-- D3.js -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js" charset="utf-8"></script>
@@ -44,21 +47,33 @@
 	    <div class="modal-content">
 	      <div class="modal-header">
 	        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-	        <h4 class="modal-title" id="myModalLabel">Spirographs</h4>
+	        <h4 class="modal-title" id="myModalLabel">Draw your own Spirographs</h4>
 	      </div>
 	      <div class="modal-body">
-			  <p class="start-message">On this webpage you can go crazy in creating spirographs!<br>Click anywhere to draw a random shape, either dashed or solid</p>
-			  <p>Use the buttons in the control box to have more control. Draw a dashed spirograph, remove the last drawn shape or remove them all with a reset.</p>
-				  <p>The set-up was originally created as an example for my D3 tutorial <a href="http://www.visualcinnamon.com/2016/01/animating-dashed-line-d3.html">"Animated (dashed) lines in d3.js with Spirographs"</a>. This version has been expanded to offer you the freedom to set your own spirograph parameters.</p>
-			  <p>In the "Parameters" folder of the control box you can see 4 different adjustable variables to make any shape that you like. Try to envision how the spirograph would look like in real life, a small circle rotating inside a larger fixed circle (see the image below).<br>There is the duration of the drawing (in seconds). The radius of the outer circle, in which the smaller circle (with its own radius) goes around. And finally, there is the location of the pen hole inside the smaller circle. The distance between the center of the small circle and the pen hole is given by ρ (rho). In this visual I’ve used the physical contstraints that ρ < r and r < R.</p>
+			  <p>Draw a random spirograph by pressing "Add random spiro" or clicking anywhere on the page. If you want complete control; in the "Parameters" folder of the upper right control box you can see all the different adjustable variables to make any shape that you like:
+			  	<ul>
+			  		<li>Outer wheel: the radius or number of teeth of the fixed wheel - Good numbers are 96 or 105</li>
+			  		<li>Inner wheel: the radius or number of teeth of the moving wheel - Good numbers are 24, 30, 32, 36, 40, 42, 45, 48, 50, 52, 56, 60, 63, 64, 72, 75, 80, 84 - remains smaller than the outer wheel's size</li>
+			  		<li>% inner wheel: similar to the hole number inside the inner wheel, but represented as the % of the inner wheel from the center (0.025 (=2.5%) is about 1 hole) - runs between 0 and 1</li>
+			  		<li>&#945;: the offset from the starting point in degrees - runs from -180 degrees to 180</li>
+			  		<li>Start: after how many degrees in the calculation should the line be drawn. This can be useful to draw one spirograph loop in multiple colors</li>
+			  		<li>Steps: How many degrees should the spirograph run for. Typically the inner wheel makes many full circles to complete a pattern</li>
+			  		<li>Scale: change the size of the next spirograph drawn. It multiplies the outer and inner wheel sizes by scale</li>
+			  		<li>Duration: how many seconds should the full drawing take</li>
+			  		<li>Line width: the stroke width of the line</li>
+			  		<li>Color mode: the blend mode of the next spirographs to create interesting effects of intersecting lines. Screen works best on dark backgrounds and multiply on white. Most beautiful with thick lines</li>
+			  		<li>Color: set the color of the next spirograph. If you make no choice, it will loop through 3 colors</li>
+			  		<li>Background: set the color of the background</li>
+			  	</ul>
+			  </p>
 			  
 			  <div style="text-align: center;"><a id="spiro-parameters" href="images/Spirograph-parameters.png" title="The spirograph parameters">
-				  <img class="spirograph-parameter-img" src="images/Spirograph-parameters.png" alt="The spirograph parameters" />
+				  <img class="spirograph-parameter-img" src="images/Spirograph-parameters.png" alt="Spirograph parameters" />
 			  </a></div>
 			  
-			<p>If you do not adjust the settings and draw a spirograph, either by clicking anywhere on the page or by using the draw buttons in the control box, a random set of values will be used for the 3 radii. So you can click away and get a new shape each time. However, once you change one of the three radii values, the next spirograph will use these values for its settings.</p>
-			  
-	        <p>See <a href="https://en.wikipedia.org/wiki/Spirograph#Mathematical_basis">the wiki page</a> for info on the mathematical basis of Spirographs. If you'd like to save the resulting image as an SVG I'd suggest using <a href="http://nytimes.github.io/svg-crowbar/">SVG Crowbar</a>. Very simple and extremely useful in many situations.</p>
+			  <p>Originally created as an example for my D3 tutorial <a href="http://www.visualcinnamon.com/2016/01/animating-dashed-line-d3.html">"Animated (dashed) lines in d3.js with Spirographs"</a>. If you'd like to save the resulting image as an SVG I'd suggest using <a href="http://nytimes.github.io/svg-crowbar/">SVG Crowbar</a>. Very simple and extremely useful in many situations.</p>
+
+	          <p>Have fun!</p>
 	      </div>
 	    </div>
 	  </div>
