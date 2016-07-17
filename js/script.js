@@ -46,8 +46,8 @@ var spiroParameters = {};
 	spiroParameters["Reset"] = resetSpiro;
 	//Parameter controls
 	spiroParameters["Duration"] = 4; //in seconds
-	spiroParameters["Outer wheel"] = 105;
-	spiroParameters["Inner wheel"] = 48;
+	spiroParameters["Outer wheel"] = 96;
+	spiroParameters["Inner wheel"] = 56;
 	spiroParameters["% inner wheel"] = 0.8;
 	spiroParameters[eval('"\\u03B1"')] = 0.05;
 	spiroParameters["Start"] = 0;
@@ -58,8 +58,7 @@ var spiroParameters = {};
 	spiroParameters["Background"] = "#101420";
 	//Make the first spirograph fit nicely in the screen
 	spiroParameters["Scale"] = Math.round(maxRadiusScreenFirstSpiro / spiroParameters["Outer wheel"] * 10)/10;
-
-		
+	
 //Basic line function
 var line = d3.svg.line()
 	.x(function(d) { return d.x; })
@@ -305,6 +304,9 @@ backColorContr.onChange(function(newValue) {
 	d3.select("body").style("background", newValue);
 });
 
+//Open the parameter options by default
+folder2.open();
+
 
 //Close the controls if the person is on mobile
 if(mobileScreen) gui.close();
@@ -345,16 +347,57 @@ $(document).ready(function() {
           }
     });
 		
-	//Start drawing one spirograph after 1 second after reload
+	//Start drawing a spirograph combination 1 second after reload
 	setTimeout(function() {
-		//Strange fix to make alpha be updatable by 0.05
-		spiroParameters[eval('"\\u03B1"')] = 0;
-		alphaContr.updateDisplay();
 
+		//var colors = ["#170E5E", "#2A85C8", "#88C425", "#2A85C8", "#3ac0de"],
+		var colors = ["#170E5E", "#2A85C8", "#88C425", "#2A85C8", "#00AC93"],
+			background = spiroParameters["Background"],
+			thick = 3,
+			step = 0.05,
+			offset = 3.75,
+			startRho = 0.8,
+			steps = 2600,
+			scale = Math.round(maxRadiusScreenFirstSpiro / 96 * 10)/10;
+			
+		//R, r, rho, alpha, start, steps, duration, width, blendmode, color, background, scale
+		changeParameters(96, 56, startRho, 0, 0, steps, 4, thick, "screen", colors[0], background, scale, false);
 		drawSpiro(false);
-		pickNewColor();
+		for(var i = 1; i <=3; i++) {
+			changeParameters(96, 56, startRho - i*step, i*offset, 0, steps, 4, thick, "screen", colors[i], background, scale, false);
+			drawSpiro(false);
+			
+			changeParameters(96, 56, startRho - i*step, -i*offset, 0, steps, 4, thick, "screen", colors[i], background, scale, false);
+			drawSpiro(false);
+		}//for i
+		changeParameters(96, 56, startRho - 4*step, 4*offset, 0, steps, 4, thick, "screen", colors[colors.length-1], background, scale, true);
+		drawSpiro(false);
+		
 	}, 1000);
   });
+
+//Change all the parameters at once
+function changeParameters(R, r, rho, alpha, start, steps, duration, width, blendmode, color, background, scale, update) {
+	if(typeof R !== "undefined") spiroParameters["Outer wheel"] = R;
+	if(typeof r !== "undefined") spiroParameters["Inner wheel"] = r;
+	if(typeof rho !== "undefined") spiroParameters["% inner wheel"] = rho;
+	if(typeof alpha !== "undefined") spiroParameters[eval('"\\u03B1"')] = alpha;
+	if(typeof start !== "undefined") spiroParameters["Start"] = start;
+	if(typeof steps !== "undefined") spiroParameters["Steps"] = steps;
+	if(typeof duration !== "undefined") spiroParameters["Duration"] = duration;
+	if(typeof width !== "undefined") spiroParameters["Line width"] = width;
+	if(typeof blendmode !== "undefined") spiroParameters["Color mode"] = blendmode;
+	if(typeof color !== "undefined") spiroParameters["Color"] = color;
+	if(typeof background !== "undefined") spiroParameters["Background"] = background;
+	if(typeof scale !== "undefined") spiroParameters["Scale"] = scale;
+	
+	if(update) {
+		//Update the control box with the new parameters
+		for (var i in folder2.__controllers) {
+		    folder2.__controllers[i].updateDisplay();
+		}//for i
+	}//if
+}//changeParameters
 
 ////////////////////////////////////////////////////////////
 //////////////////// Helper Functions //////////////////////
